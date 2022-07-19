@@ -6,6 +6,7 @@ const player = new Player(playerIframeRef, { autoplay: true });
 
 const PLAYER_STATE_LS_NAME = 'player-state';
 
+// Player state object
 const playerState = {
   currentTime: 0,
   quality: 'auto',
@@ -13,8 +14,10 @@ const playerState = {
 };
 
 const setPlayerStateFromLocalStorage = () => {
+  // Get LS data
   const playerStateStorage = localStorage.getItem(PLAYER_STATE_LS_NAME);
 
+  // Parse LS data to state object
   if (playerStateStorage) {
     const { currentTime, quality, isPlay } = JSON.parse(playerStateStorage);
     playerState.currentTime = currentTime ?? 0;
@@ -22,10 +25,11 @@ const setPlayerStateFromLocalStorage = () => {
     playerState.isPlay = isPlay ?? false;
   }
 
+  // Apply state from state object
   player.setCurrentTime(playerState.currentTime);
   player.setQuality(playerState.quality);
   if (playerState.isPlay) {
-    // Browser autoplay policy
+    // Mute because of browser autoplay policy
     player.setVolume(0);
     player.play();
   }
@@ -57,6 +61,7 @@ const onPlayerQualityChange = ({ quality }) => {
 };
 
 const onPlayerVideoEnded = () => {
+  // Timeout because of throtle
   setTimeout(() => localStorage.removeItem(PLAYER_STATE_LS_NAME), 1000);
 };
 
