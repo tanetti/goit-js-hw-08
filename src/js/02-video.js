@@ -4,30 +4,15 @@ import Player from '@vimeo/player';
 const playerIframeRef = document.querySelector('#vimeo-player');
 const player = new Player(playerIframeRef, { autoplay: true });
 
-const PLAYER_STATE_LS_NAME = 'player-state';
+const PLAYER_STATE_LS_KEY = 'player-state';
 
-// Player state object
-const playerState = {
-  currentTime: 0,
-  quality: 'auto',
-  isPlay: false,
-};
+let playerState = JSON.parse(localStorage.getItem(PLAYER_STATE_LS_KEY)) ?? {};
 
 const setPlayerStateFromLocalStorage = () => {
-  // Get LS data
-  const playerStateStorage = localStorage.getItem(PLAYER_STATE_LS_NAME);
+  if (Object.keys(playerState).length === 0) return;
 
-  // Parse LS data to state object
-  if (playerStateStorage) {
-    const { currentTime, quality, isPlay } = JSON.parse(playerStateStorage);
-    playerState.currentTime = currentTime ?? 0;
-    playerState.quality = quality ?? 'auto';
-    playerState.isPlay = isPlay ?? false;
-  }
-
-  // Apply state from state object
-  player.setCurrentTime(playerState.currentTime);
-  player.setQuality(playerState.quality);
+  player.setCurrentTime(playerState.currentTime ?? 0);
+  player.setQuality(playerState.quality ?? 'auto');
   if (playerState.isPlay) {
     // Mute because of browser autoplay policy
     player.setVolume(0);
@@ -37,7 +22,7 @@ const setPlayerStateFromLocalStorage = () => {
 
 setPlayerStateFromLocalStorage();
 
-const updateLocalStorage = () => localStorage.setItem(PLAYER_STATE_LS_NAME, JSON.stringify(playerState));
+const updateLocalStorage = () => localStorage.setItem(PLAYER_STATE_LS_KEY, JSON.stringify(playerState));
 
 const onPlayerTimeUpdate = ({ seconds }) => {
   playerState.currentTime = seconds;
@@ -62,7 +47,8 @@ const onPlayerQualityChange = ({ quality }) => {
 
 const onPlayerVideoEnded = () => {
   // Timeout because of throtle
-  setTimeout(() => localStorage.removeItem(PLAYER_STATE_LS_NAME), 1000);
+  setTimeout(() => localStorage.removeItem(PLAYER_STATE_LS_KEY), 1000);
+  playerState = {};
 };
 
 player.on('timeupdate', throtle(onPlayerTimeUpdate, 1000));
