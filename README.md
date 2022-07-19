@@ -1,1 +1,1 @@
-# goit-js-hw-08
+# GoIT JavaScript H/W - 07
