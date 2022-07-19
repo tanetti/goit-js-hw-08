@@ -3,6 +3,9 @@ import Player from '@vimeo/player';
 
 const playerIframeRef = document.querySelector('#vimeo-player');
 const player = new Player(playerIframeRef, { autoplay: true });
+
+const PLAYER_STATE_LS_NAME = 'player-state';
+
 const playerState = {
   currentTime: 0,
   quality: 'auto',
@@ -10,13 +13,13 @@ const playerState = {
 };
 
 const setPlayerStateFromLocalStorage = () => {
-  const playerStateStorage = localStorage.getItem('player-state');
+  const playerStateStorage = localStorage.getItem(PLAYER_STATE_LS_NAME);
 
   if (playerStateStorage) {
     const { currentTime, quality, isPlay } = JSON.parse(playerStateStorage);
-    playerState.currentTime = currentTime;
-    playerState.quality = quality;
-    playerState.isPlay = isPlay;
+    playerState.currentTime = currentTime ?? 0;
+    playerState.quality = quality ?? 'auto';
+    playerState.isPlay = isPlay ?? false;
   }
 
   player.setCurrentTime(playerState.currentTime);
@@ -30,7 +33,7 @@ const setPlayerStateFromLocalStorage = () => {
 
 setPlayerStateFromLocalStorage();
 
-const updateLocalStorage = () => localStorage.setItem('player-state', JSON.stringify(playerState));
+const updateLocalStorage = () => localStorage.setItem(PLAYER_STATE_LS_NAME, JSON.stringify(playerState));
 
 const onPlayerTimeUpdate = ({ seconds }) => {
   playerState.currentTime = seconds;
@@ -53,7 +56,12 @@ const onPlayerQualityChange = ({ quality }) => {
   updateLocalStorage();
 };
 
+const onPlayerVideoEnded = () => {
+  setTimeout(() => localStorage.removeItem(PLAYER_STATE_LS_NAME), 1000);
+};
+
 player.on('timeupdate', throtle(onPlayerTimeUpdate, 1000));
 player.on('play', onPlayerPlay);
 player.on('pause', onPlayerPause);
 player.on('qualitychange', onPlayerQualityChange);
+player.on('ended', onPlayerVideoEnded);
